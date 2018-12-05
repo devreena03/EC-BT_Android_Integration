@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.braintreepayments.api.BraintreeFragment;
 import com.braintreepayments.api.PayPal;
@@ -26,6 +27,10 @@ public class MainActivity extends AppCompatActivity implements PaymentMethodNonc
     private String clientToken="";
     private String nonce;
     private BraintreeFragment mBraintreeFragment;
+    private static final String BASE_URL = "https://paypal-integration-sample.herokuapp.com";
+   // private static final String BASE_URL = "https://iocor.serveo.net";
+    private static final String CLIENT_TOKEN = "/api/paypal/ecbt/client_token";
+    private static final String CHECKOUT = "/api/paypal/ecbt/checkout";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.e("enter  ","onCreate");
@@ -33,7 +38,7 @@ public class MainActivity extends AppCompatActivity implements PaymentMethodNonc
         setContentView(R.layout.activity_main);
 
         AsyncHttpClient client = new AsyncHttpClient();
-        client.get("https://bt-direct.herokuapp.com/payments/client_token", new TextHttpResponseHandler() {
+        client.get(BASE_URL + CLIENT_TOKEN, new TextHttpResponseHandler() {
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
             }
@@ -54,8 +59,6 @@ public class MainActivity extends AppCompatActivity implements PaymentMethodNonc
             // There was an issue with your authorization string.
         }
         setupBraintreeAndStartExpressCheckout();
-        final TextView tvOut = (TextView) findViewById(R.id.textView);
-        tvOut.setText("pay success");
         Log.e("exit  ","payNow");
     }
 
@@ -87,13 +90,19 @@ public class MainActivity extends AppCompatActivity implements PaymentMethodNonc
         RequestParams params = new RequestParams();
         params.put("nonce", nonce);
         params.put("amount", "20");
+        params.put("currency", "INR");
         Log.e("nonce  ",nonce);
-        client.post("https://bt-direct.herokuapp.com/payments/checkout", params,
+        client.post(BASE_URL + CHECKOUT, params,
                 new AsyncHttpResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                         String body = new String(responseBody);
                         Log.d("payment  ",body);
+                        Toast toast = Toast.makeText(getApplicationContext(),
+                                "Payment "+body,
+                                Toast.LENGTH_SHORT);
+
+                        toast.show();
                     }
 
                     @Override

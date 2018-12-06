@@ -1,11 +1,15 @@
 package bt.paypal.com.ecbt;
 
 import android.app.Activity;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,8 +23,12 @@ import com.braintreepayments.api.models.PaymentMethodNonce;
 import com.braintreepayments.api.models.PostalAddress;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.loopj.android.http.HttpGet;
 import com.loopj.android.http.RequestParams;
 import com.loopj.android.http.TextHttpResponseHandler;
+
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -34,29 +42,39 @@ public class MainActivity extends AppCompatActivity implements PaymentMethodNonc
    // private static final String BASE_URL = "https://iocor.serveo.net";
     private static final String CLIENT_TOKEN_URL = "/api/paypal/ecbt/client_token";
     private static final String CHECKOUT = "/api/paypal/ecbt/checkout";
+
+
+    public void showLoader(Boolean setVisibilty) {
+        ProgressBar progress = (ProgressBar) findViewById(R.id.progressBar);
+        int colorCodeDark = Color.parseColor("#253B80");
+        progress.setIndeterminateTintList(ColorStateList.valueOf(colorCodeDark));
+        if(setVisibilty) {
+            progress.setVisibility(View.VISIBLE);
+        }else {
+            progress.setVisibility(View.INVISIBLE);
+        }
+    }
+
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.e("enter  ","onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mActivityRef = this;
-        Button btn = (Button) findViewById(R.id.button);
 
-//        AsyncHttpClient client = new AsyncHttpClient();
-//        client.get(BASE_URL + CLIENT_TOKEN_URL, new TextHttpResponseHandler() {
-//            @Override
-//            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-//            }
-//            @Override
-//            public void onSuccess(int statusCode, Header[] headers, String response) {
-//                Log.i("DONE clientToken",response);
-//                clientToken = response;
-//            }
-//        });
-                Log.e("exit  ", "onCreate");
+
+
     }
     public void payNow(View v){
+        Button btn = (Button) findViewById(R.id.button);
+        btn.setEnabled(false);
         Log.e("enter  ","payNow");
+        showLoader(true); // set loader visible
+
+
         try {
                 AsyncHttpClient client = new AsyncHttpClient();
                 client.get(BASE_URL + CLIENT_TOKEN_URL, new TextHttpResponseHandler() {
@@ -72,6 +90,7 @@ public class MainActivity extends AppCompatActivity implements PaymentMethodNonc
                            mBraintreeFragment = BraintreeFragment.newInstance(mActivityRef, clientToken);
                            setupBraintreeAndStartExpressCheckout();
                            Log.e("exit  ","payNow");
+                           showLoader(false); // set loader visible
                         } catch (InvalidArgumentException e) {
                             Log.e("error  ",e.getMessage());
                         }

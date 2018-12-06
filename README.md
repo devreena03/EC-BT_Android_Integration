@@ -6,6 +6,10 @@ PayPal EC-BT Android Integration sample code
 >https://paypal-integration-sample.herokuapp.com/
 > Make sure the above link is live before testing
 
+##### APK
+
+>https://github.com/devreena03/ec-bt_android_integration/blob/master/TEST_APK/
+
 
 ##### Screencast
 

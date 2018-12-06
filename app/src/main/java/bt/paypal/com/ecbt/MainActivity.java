@@ -1,9 +1,11 @@
 package bt.paypal.com.ecbt;
 
+import android.app.Activity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,42 +26,60 @@ import cz.msebera.android.httpclient.Header;
 
 public class MainActivity extends AppCompatActivity implements PaymentMethodNonceCreatedListener {
 
-    private String clientToken="";
+    private String clientToken=null;
     private String nonce;
     private BraintreeFragment mBraintreeFragment;
+    private static Activity mActivityRef = null;
     private static final String BASE_URL = "https://paypal-integration-sample.herokuapp.com";
    // private static final String BASE_URL = "https://iocor.serveo.net";
-    private static final String CLIENT_TOKEN = "/api/paypal/ecbt/client_token";
+    private static final String CLIENT_TOKEN_URL = "/api/paypal/ecbt/client_token";
     private static final String CHECKOUT = "/api/paypal/ecbt/checkout";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.e("enter  ","onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mActivityRef = this;
+        Button btn = (Button) findViewById(R.id.button);
 
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.get(BASE_URL + CLIENT_TOKEN, new TextHttpResponseHandler() {
-            @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-            }
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, String response) {
-                Log.i("DONE clientToken",response);
-                clientToken = response;
-            }
-        });
-        Log.e("exit  ","onCreate");
+//        AsyncHttpClient client = new AsyncHttpClient();
+//        client.get(BASE_URL + CLIENT_TOKEN_URL, new TextHttpResponseHandler() {
+//            @Override
+//            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+//            }
+//            @Override
+//            public void onSuccess(int statusCode, Header[] headers, String response) {
+//                Log.i("DONE clientToken",response);
+//                clientToken = response;
+//            }
+//        });
+                Log.e("exit  ", "onCreate");
     }
     public void payNow(View v){
         Log.e("enter  ","payNow");
         try {
-            mBraintreeFragment = BraintreeFragment.newInstance(this, clientToken);
-            Log.i("mBraintreeFragment", "done");
-        } catch (InvalidArgumentException e) {
-            // There was an issue with your authorization string.
+                AsyncHttpClient client = new AsyncHttpClient();
+                client.get(BASE_URL + CLIENT_TOKEN_URL, new TextHttpResponseHandler() {
+                    @Override
+                    public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                        Log.i("fail", responseString);
+                    }
+                    @Override
+                    public void onSuccess(int statusCode, Header[] headers, String response) {
+                        Log.i("DONE clientToken",response);
+                        clientToken = response;
+                        try {
+                           mBraintreeFragment = BraintreeFragment.newInstance(mActivityRef, clientToken);
+                           setupBraintreeAndStartExpressCheckout();
+                           Log.e("exit  ","payNow");
+                        } catch (InvalidArgumentException e) {
+                            Log.e("error  ",e.getMessage());
+                        }
+                    }
+                });
+        } catch (Exception e) {
+            Log.e("error  ",e.getMessage());
         }
-        setupBraintreeAndStartExpressCheckout();
-        Log.e("exit  ","payNow");
     }
 
     @Override

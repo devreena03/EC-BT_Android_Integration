@@ -18,6 +18,7 @@ import com.braintreepayments.api.PayPal;
 import com.braintreepayments.api.exceptions.InvalidArgumentException;
 import com.braintreepayments.api.interfaces.PaymentMethodNonceCreatedListener;
 import com.braintreepayments.api.models.PayPalAccountNonce;
+import com.braintreepayments.api.models.PayPalLineItem;
 import com.braintreepayments.api.models.PayPalRequest;
 import com.braintreepayments.api.models.PaymentMethodNonce;
 import com.braintreepayments.api.models.PostalAddress;
@@ -29,6 +30,8 @@ import com.loopj.android.http.TextHttpResponseHandler;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -54,9 +57,6 @@ public class MainActivity extends AppCompatActivity implements PaymentMethodNonc
             progress.setVisibility(View.INVISIBLE);
         }
     }
-
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,6 +99,35 @@ public class MainActivity extends AppCompatActivity implements PaymentMethodNonc
         } catch (Exception e) {
             Log.e("error  ",e.getMessage());
         }
+    }
+    private void setupBraintreeAndStartExpressCheckout() {
+        Log.e("enter  ","setupBraintreeAndStartExpressCheckout");
+        PostalAddress add = new PostalAddress();
+        add.recipientName("S2S store");
+        add.streetAddress("test street");
+        add.locality("city");
+        add.region("state");
+        add.postalCode("600044");
+        add.countryCodeAlpha2("IN");
+
+        List<PayPalLineItem> lineItems = new ArrayList<>();
+        lineItems.add(new PayPalLineItem( PayPalLineItem.KIND_DEBIT,"book","2", "10"));
+        lineItems.add(new PayPalLineItem( PayPalLineItem.KIND_DEBIT,"shirt","1", "10"));
+
+        PayPalRequest request = new PayPalRequest("20")
+                .currencyCode("INR")
+                .intent(PayPalRequest.INTENT_SALE)
+                .userAction(PayPalRequest.USER_ACTION_DEFAULT)
+                .landingPageType(PayPalRequest.LANDING_PAGE_TYPE_BILLING)
+                .shippingAddressRequired(true)
+                .shippingAddressEditable(false)
+                .localeCode("en_US")
+                .displayName("My shop brand")
+                .lineItems(lineItems)
+                .shippingAddressOverride(add);
+
+        PayPal.requestOneTimePayment(mBraintreeFragment, request);
+        Log.e("exit  ","setupBraintreeAndStartExpressCheckout");
     }
 
     @Override
@@ -154,25 +183,6 @@ public class MainActivity extends AppCompatActivity implements PaymentMethodNonc
         Log.e("exit  ","postNonceToServer");
     }
 
-    private void setupBraintreeAndStartExpressCheckout() {
-        Log.e("enter  ","setupBraintreeAndStartExpressCheckout");
-        PostalAddress add = new PostalAddress();
-        add.recipientName("S2S store");
-        add.streetAddress("test street");
-        add.locality("city");
-        add.region("state");
-        add.postalCode("600044");
-        add.countryCodeAlpha2("IN");
 
-
-        PayPalRequest request = new PayPalRequest("20")
-                .currencyCode("INR")
-                .intent(PayPalRequest.INTENT_SALE)
-                .userAction(PayPalRequest.USER_ACTION_COMMIT)
-                .shippingAddressRequired(true)
-                .shippingAddressOverride(add);
-        PayPal.requestOneTimePayment(mBraintreeFragment, request);
-        Log.e("exit  ","setupBraintreeAndStartExpressCheckout");
-    }
 
 }

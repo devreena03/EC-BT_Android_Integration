@@ -40,75 +40,61 @@ public class MainActivity extends AppCompatActivity implements PaymentMethodNonc
     private String clientToken=null;
     private String nonce;
     private BraintreeFragment mBraintreeFragment;
-    private static Activity mActivityRef = null;
     private static final String BASE_URL = "https://paypal-integration-sample.herokuapp.com";
-   // private static final String BASE_URL = "https://iocor.serveo.net";
+
     private static final String CLIENT_TOKEN_URL = "/api/paypal/ecbt/client_token";
     private static final String CHECKOUT = "/api/paypal/ecbt/checkout";
-
-
-    public void showLoader(Boolean setVisibilty) {
-        ProgressBar progress = (ProgressBar) findViewById(R.id.progressBar);
-        int colorCodeDark = Color.parseColor("#253B80");
-        progress.setIndeterminateTintList(ColorStateList.valueOf(colorCodeDark));
-        if(setVisibilty) {
-            progress.setVisibility(View.VISIBLE);
-        }else {
-            progress.setVisibility(View.INVISIBLE);
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.e("enter  ","onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mActivityRef = this;
+        try {
+            AsyncHttpClient client = new AsyncHttpClient();
+            client.get(BASE_URL + CLIENT_TOKEN_URL, new TextHttpResponseHandler() {
+                @Override
+                public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                    Log.i("fail", responseString);
+                }
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, String response) {
+                    Log.i("DONE clientToken",response);
+                    clientToken = response;
 
+                }
+            });
+        } catch (Exception e) {
+            Log.e("error  ",e.getMessage());
+        }
 
 
     }
     public void payNow(View v){
-        Button btn = (Button) findViewById(R.id.button);
-        btn.setEnabled(false);
         Log.e("enter  ","payNow");
-        showLoader(true); // set loader visible
-
-
         try {
-                AsyncHttpClient client = new AsyncHttpClient();
-                client.get(BASE_URL + CLIENT_TOKEN_URL, new TextHttpResponseHandler() {
-                    @Override
-                    public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                        Log.i("fail", responseString);
-                    }
-                    @Override
-                    public void onSuccess(int statusCode, Header[] headers, String response) {
-                        Log.i("DONE clientToken",response);
-                        clientToken = response;
-                        try {
-                           mBraintreeFragment = BraintreeFragment.newInstance(mActivityRef, clientToken);
-                           setupBraintreeAndStartExpressCheckout();
-                           Log.e("exit  ","payNow");
-                           showLoader(false); // set loader visible
-                        } catch (InvalidArgumentException e) {
-                            Log.e("error  ",e.getMessage());
-                        }
-                    }
-                });
-        } catch (Exception e) {
+            mBraintreeFragment = BraintreeFragment.newInstance(this, clientToken);
+//            PayPalRequest request = new PayPalRequest("20")
+//                    .currencyCode("USD")
+//                    .intent(PayPalRequest.INTENT_SALE);
+//            PayPal.requestOneTimePayment(mBraintreeFragment, request);
+            setupBraintreeAndStartExpressCheckout();
+            Log.e("exit  ","payNow");
+
+        } catch (InvalidArgumentException e) {
             Log.e("error  ",e.getMessage());
         }
+
     }
     private void setupBraintreeAndStartExpressCheckout() {
         Log.e("enter  ","setupBraintreeAndStartExpressCheckout");
-        PostalAddress add = new PostalAddress();
-        add.recipientName("S2S store");
-        add.streetAddress("test street");
-        add.locality("city");
-        add.region("state");
-        add.postalCode("600044");
-        add.countryCodeAlpha2("IN");
+//        PostalAddress add = new PostalAddress();
+//        add.recipientName("S2S store");
+//        add.streetAddress("test street");
+//        add.locality("city");
+//        add.region("state");
+//        add.postalCode("600044");
+//        add.countryCodeAlpha2("US");
 
         List<PayPalLineItem> lineItems = new ArrayList<>();
         lineItems.add(new PayPalLineItem( PayPalLineItem.KIND_DEBIT,"book","2", "10"));
@@ -116,15 +102,15 @@ public class MainActivity extends AppCompatActivity implements PaymentMethodNonc
 
         PayPalRequest request = new PayPalRequest("20")
                 .currencyCode("INR")
-                .intent(PayPalRequest.INTENT_SALE)
-                .userAction(PayPalRequest.USER_ACTION_DEFAULT)
-                .landingPageType(PayPalRequest.LANDING_PAGE_TYPE_BILLING)
-                .shippingAddressRequired(true)
-                .shippingAddressEditable(false)
-                .localeCode("en_US")
-                .displayName("My shop brand")
-                .lineItems(lineItems)
-                .shippingAddressOverride(add);
+                .intent(PayPalRequest.INTENT_SALE);
+//                .userAction(PayPalRequest.USER_ACTION_DEFAULT)
+//                .landingPageType(PayPalRequest.LANDING_PAGE_TYPE_BILLING)
+//                .shippingAddressRequired(true)
+//                .shippingAddressEditable(false)
+//                .localeCode("en_US")
+//                .displayName("My shop brand")
+//                .lineItems(lineItems);
+               // .shippingAddressOverride(add);
 
         PayPal.requestOneTimePayment(mBraintreeFragment, request);
         Log.e("exit  ","setupBraintreeAndStartExpressCheckout");
